@@ -1,6 +1,12 @@
 import cv2
 import numpy as np
 
+from tkinter import Tk                              
+from tkinter.filedialog import askopenfilename
+
+Tk().withdraw()
+
+
 def blur_edge(img, d=31):
     h, w  = img.shape[:2]
     img_pad = cv2.copyMakeBorder(img, d, d, d, d, cv2.BORDER_WRAP)
@@ -34,7 +40,8 @@ if __name__ == '__main__':
     try:
         fn = args[0]
     except:
-        fn = 'assets/plate.jpg'
+        filename = askopenfilename() # show an "Open" dialog box and return the path to the selected file
+        fn = filename
 
     win = 'deconvolution'
 
@@ -77,8 +84,8 @@ if __name__ == '__main__':
 
     cv2.namedWindow(win)
     cv2.namedWindow('psf', 0)
-    cv2.createTrackbar('angle', win, int(opts.get('--angle', 135)), 180, update)
-    cv2.createTrackbar('d', win, int(opts.get('--d', 22)), 50, update)
+    cv2.createTrackbar('angle', win, int(opts.get('--angle', 1)), 180, update)
+    cv2.createTrackbar('d', win, int(opts.get('--d', 1)), 50, update)
     cv2.createTrackbar('SNR (db)', win, int(opts.get('--snr', 25)), 50, update)
     update(None)
 
