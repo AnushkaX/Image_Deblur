@@ -27,7 +27,7 @@ def motion_kernel(angle, d, sz=65):
 
 def defocus_kernel(d, sz=65):
     kern = np.zeros((sz, sz), np.uint8)
-    cv2.circle(kern, (sz, sz), d, 255, -1, cv2.LINE_AA, shift=1)
+    cv2.circle(kern, (sz, sz), d, 255, -1, cv2.LINE_AA, shift=1)     #draw a circle to the size of the kernel
     kern = np.float32(kern) / 255.0
     return kern
 
@@ -40,7 +40,7 @@ if __name__ == '__main__':
     try:
         fn = args[0]
     except:
-        filename = askopenfilename() # show an "Open" dialog box and return the path to the selected file
+        filename = askopenfilename()                                #show an "Open" dialog box and return the path to the selected file
         fn = filename
 
     win = 'deconvolution'
@@ -51,15 +51,19 @@ if __name__ == '__main__':
         sys.exit(1)
 
     img = np.float32(img)/255.0
+    
     cv2.imshow('input', img)                                        #show input
 
     img = blur_edge(img)
-    IMG = cv2.dft(img, flags=cv2.DFT_COMPLEX_OUTPUT)                #dourier transformation
+
+
+
+    IMG = cv2.dft(img, flags=cv2.DFT_COMPLEX_OUTPUT)                #fourier transformation
 
     defocus = '--circle' in opts
 
     def update(_):
-        ang = np.deg2rad( cv2.getTrackbarPos('angle', win) )
+        ang = np.deg2rad( cv2.getTrackbarPos('Angle', win) )        #get values according to the trackbar position
         d = cv2.getTrackbarPos('d', win)
         noise = 10**(-0.1*cv2.getTrackbarPos('SNR (db)', win))
 
@@ -70,22 +74,22 @@ if __name__ == '__main__':
         cv2.imshow('psf', psf)
 
         psf /= psf.sum()
-        psf_pad = np.zeros_like(img)
+        psf_pad = np.zeros_like(img)                                #Return an array of zeros
         kh, kw = psf.shape
         psf_pad[:kh, :kw] = psf
         PSF = cv2.dft(psf_pad, flags=cv2.DFT_COMPLEX_OUTPUT, nonzeroRows = kh)
         PSF2 = (PSF**2).sum(-1)
         iPSF = PSF / (PSF2 + noise)[...,np.newaxis]
-        RES = cv2.mulSpectrums(IMG, iPSF, 0)
+        RES = cv2.mulSpectrums(IMG, iPSF, 0)                        #per element multiplications
         res = cv2.idft(RES, flags=cv2.DFT_SCALE | cv2.DFT_REAL_OUTPUT )
-        res = np.roll(res, -kh//2, 0)
+        res = np.roll(res, -kh//2, 0)                               #roll elements in the array
         res = np.roll(res, -kw//2, 1)
         cv2.imshow(win, res)
 
     cv2.namedWindow(win)
     cv2.namedWindow('psf', 0)
-    cv2.createTrackbar('angle', win, int(opts.get('--angle', 1)), 180, update)
-    cv2.createTrackbar('d', win, int(opts.get('--d', 1)), 50, update)
+    cv2.createTrackbar('Angle', win, int(opts.get('--angle', 110)), 180, update)
+    cv2.createTrackbar('d', win, int(opts.get('--d', 10)), 50, update)
     cv2.createTrackbar('SNR (db)', win, int(opts.get('--snr', 25)), 50, update)
     update(None)
 
